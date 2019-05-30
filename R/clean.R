@@ -28,3 +28,27 @@ assign_sample_numbers <- function(raw_data, remove_valves = c()) {
   # mutate(elapsed_seconds = as.double(difftime(DATETIME, min(DATETIME), units = "secs"))) ->
   # rawdata_samples
 }
+
+
+#' Clean the data: create \code{DATETIME} field, remove fractional valves
+#'
+#' @param raw_data A \code{data.frame} of data returned by \code{\link{process_directory}}.
+#' @param tz Timezone to use for timestamps, e.g. "America/New_York", character.
+#' See \url{https://en.wikipedia.org/wiki/List_of_tz_database_time_zones}.
+#' @return
+#' @export
+clean_data <- function(raw_data, tz = "") {
+  if(tz == "") {
+    warning("Time zone blank and so being set to UTC; is this correct?")
+    tz <- "UTC"
+  }
+
+  raw_data %>%
+    # Create DATETIME field and select columns we need
+    mutate(DATETIME = as.POSIXct(paste(DATE, TIME),
+                                 format = "%Y-%m-%d %H:%M:%S", tz = tz)) %>%
+    select(DATETIME, ALARM_STATUS, MPVPosition, CH4_dry, CO2_dry, h2o_reported) %>%
+
+    # Discard any fractional valve numbers
+    filter(MPVPosition == floor(MPVPosition))
+}

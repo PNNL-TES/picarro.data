@@ -2,6 +2,7 @@
 
 export(assign_sample_numbers)
 export(process_directory)
+export(read_picarro_file)
 import(dplyr)
 importFrom(tibble,as_tibble)
 importFrom(tidyr,replace_na)
