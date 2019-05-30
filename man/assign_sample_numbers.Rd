@@ -7,10 +7,10 @@
 assign_sample_numbers(raw_data, remove_valves = c())
 }
 \arguments{
+\item{raw_data}{A \code{data.frame} of data returned by \code{\link{process_directory}}.}
+
 \item{remove_valves}{An optional vector of integer valve numbers to remove
 from the data, e.g. ambient ports.}
-
-\item{rawdata}{A \code{data.frame} of data returned by \code{\link{process_directory}}.}
 }
 \value{
 The (possibly filtered) data with a new \code{Sample_number} column.
