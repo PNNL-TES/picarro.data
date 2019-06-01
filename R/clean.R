@@ -44,11 +44,14 @@ clean_data <- function(raw_data, tz = "", remove_valves = c()) {
   raw_data %>%
     # Create DATETIME field and select columns we need
     mutate(DATETIME = as.POSIXct(paste(DATE, TIME),
-                                 format = "%Y-%m-%d %H:%M:%S", tz = tz)) %>%
+                                 format = "%Y-%m-%d %H:%M:%S",
+                                 tz = tz)) %>%
     select(DATETIME, ALARM_STATUS, MPVPosition, CH4_dry, CO2_dry, h2o_reported) %>%
 
-    # Discard any fractional valve numbers
-    filter(MPVPosition == floor(MPVPosition)) %>%
-    # Remove unwanted valves
-    filter(!MPVPosition %in% remove_valves)
+    # Discard any fractional valve numbers,
+    filter(MPVPosition == floor(MPVPosition),
+           # invalid timestamps,
+           !is.na(DATETIME),
+           # and unwanted valves
+           !MPVPosition %in% remove_valves)
 }
