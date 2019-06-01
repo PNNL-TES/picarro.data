@@ -14,7 +14,7 @@ test_that("compute_flux", {
 
   # Roughly reproduce the example from p. 1-24 of the Licor 8100A manual
   x <- compute_flux(
-    seconds = seq(7.3, 120, length.out = 10), # figure 1-3
+    time = seq(7.3, 120, length.out = 10), # figure 1-3
     gas_ppm = seq(434, 570, length.out = 10), # figure 1-3
     volume_cm3 = 7385.3,                      # LI-8100A system volume
     tair_C = 25                               # "tropical greenhouse"

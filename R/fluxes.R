@@ -3,14 +3,16 @@
 
 #' Compute respiration flux from concentration data.
 #'
-#' @param seconds Timestamps in (typically) seconds; numeric vector
+#' @param time Time (typically in seconds); numeric vector
 #' @param gas_ppm Gas (e.g. CO2 or CH4) concentrations, ppmv; numeric vector
 #' @param volume_cm3 System volume, cm3; numeric
 #' @param tair_C Air temperature, C; numeric
 #' @param pressure_kPa Air pressure, kPa; numeric
 #' @param debug_plot Produce a plot of data and fitted model? Logical
 #'
-#' @return The gas flux, µmol per second.
+#' @return The gas flux, µmol per unit time.
+#' @importFrom graphics abline plot title
+#' @importFrom stats coefficients lm na.omit
 #' @export
 #'
 #' @references
@@ -23,18 +25,24 @@
 #'  \item{LI-COR Biosciences (2015), Using the LI-8100A Soil Gas Flux System & the LI-8150
 #'  Multiplexer, 984-11123. 238 pp.}
 #' }
+#' @details We derive the rate of concentration change via the slope of the
+#' linear regression of all data points of concentrations versus time.
+#' One problem with this method is that the linearity attributed to the
+#' regression is incorrect in a strict sense, since the gradients in
+#' water vapor and CO2 decrease over time in a closed chamber (see
+#' discussion in Steduto et al. below). This method should thus not be
+#' used for long measurement periods.
+#'
 #' @note The computed is \emph{not} area- or mass-corrected.
 #'
-#' @importFrom graphics abline plot title
-#' @importFrom stats coefficients lm na.omit
-#'
 #' @examples
+#' # ten-second CO2 rise at room temperature
 #' compute_flux(1:10, 401:410, volume_cm3 = 2000, tair_C = 20)
-compute_flux <- function(seconds, gas_ppm, volume_cm3, tair_C,
+compute_flux <- function(time, gas_ppm, volume_cm3, tair_C,
                          pressure_kPa = 101.325, debug_plot = FALSE) {
 
-  stopifnot(length(seconds) == length(gas_ppm))
-  stopifnot(length(na.omit(seconds)) > 2)
+  stopifnot(length(time) == length(gas_ppm))
+  stopifnot(length(na.omit(time)) > 2)
   stopifnot(length(na.omit(gas_ppm)) > 2)
   stopifnot(gas_ppm >= 0)
   stopifnot(volume_cm3 > 0)
@@ -53,18 +61,18 @@ compute_flux <- function(seconds, gas_ppm, volume_cm3, tair_C,
 
   R <- 8.3145e+3			# cm3 kPa K−1 mol−1
 
-  # Compute ppm/s change in gas concentration
-  m <- lm(gas_ppm ~ seconds)
-  gas_ppm_s <- unname(coefficients(m)["seconds"])
+  # Compute ppm/time unit change in gas concentration
+  m <- lm(gas_ppm ~ time)
+  gas_ppm_time <- unname(coefficients(m)["time"])
 
   if(debug_plot) {
-    plot(seconds, gas_ppm)
+    plot(time, gas_ppm)
     abline(coefficients(m))
-    title(paste("gas_ppm_s = ", round(gas_ppm_s, 4)))
+    title(paste("gas_ppm_s = ", round(gas_ppm_time, 4)))
   }
 
-  # Respiration, µmol/s via ideal gas law
-  gas_ppm_s * volume_cm3 * pressure_kPa / (R * (tair_C + 273.15))
+  # Respiration, µmol/time unit via ideal gas law
+  gas_ppm_time * volume_cm3 * pressure_kPa / (R * (tair_C + 273.15))
 }
 
 

@@ -4,11 +4,11 @@
 \alias{compute_flux}
 \title{Compute respiration flux from concentration data.}
 \usage{
-compute_flux(seconds, gas_ppm, volume_cm3, tair_C,
-  pressure_kPa = 101.325, debug_plot = FALSE)
+compute_flux(time, gas_ppm, volume_cm3, tair_C, pressure_kPa = 101.325,
+  debug_plot = FALSE)
 }
 \arguments{
-\item{seconds}{Timestamps in (typically) seconds; numeric vector}
+\item{time}{Time (typically in seconds); numeric vector}
 
 \item{gas_ppm}{Gas (e.g. CO2 or CH4) concentrations, ppmv; numeric vector}
 
@@ -21,15 +21,25 @@ compute_flux(seconds, gas_ppm, volume_cm3, tair_C,
 \item{debug_plot}{Produce a plot of data and fitted model? Logical}
 }
 \value{
-The gas flux, µmol per second.
+The gas flux, µmol per unit time.
 }
 \description{
 Compute respiration flux from concentration data.
+}
+\details{
+We derive the rate of concentration change via the slope of the
+linear regression of all data points of concentrations versus time.
+One problem with this method is that the linearity attributed to the
+regression is incorrect in a strict sense, since the gradients in
+water vapor and CO2 decrease over time in a closed chamber (see
+discussion in Steduto et al. below). This method should thus not be
+used for long measurement periods.
 }
 \note{
 The computed is \emph{not} area- or mass-corrected.
 }
 \examples{
+# ten-second CO2 rise at room temperature
 compute_flux(1:10, 401:410, volume_cm3 = 2000, tair_C = 20)
 }
 \references{
