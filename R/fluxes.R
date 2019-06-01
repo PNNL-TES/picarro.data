@@ -97,7 +97,7 @@ cumulative_evolution <- function(time, flux, interpolate = TRUE) {
     flux = approx(time, flux, xout = time, rule = 2)[['y']]
   }
 
-  delta_time <- (time - lag(time))[-1]
+  delta_time <- time[-1] - head(time, -1)
 
   intermediate_fluxes <- rep(NA_real_, length(delta_time))
   ivals <- head(seq_along(flux), -1)

@@ -30,7 +30,6 @@ read_picarro_file <- function(filename) {
 #' @param path Folder to process, character.
 #' @param recursive Scan (via \code{\link{list.files}}) subfolders? Logical.
 #' @return A \code{data.frame} of the data.
-#' @import dplyr
 #' @note This can read plain-text or compressed (via \code{zip} or \code{gz}) files.
 #' @export
 process_directory <- function(path, recursive = TRUE) {
@@ -43,7 +42,8 @@ process_directory <- function(path, recursive = TRUE) {
   message("Found ", length(filelist), " files")
   for(f in filelist) {
     filedata[[f]] <- read_picarro_file(f)
+    filedata[[f]]$Filename <- f
   }
 
-  bind_rows(filedata, .id = "Filename")
+  do.call("rbind", filedata)
 }
