@@ -25,3 +25,19 @@ test_that("compute_flux", {
   # If it's 20 cm, then the flux computed here is 1.9x too high
   # If it was a custom 27 cm diameter chamber (area = ~600 cm2) then things match
 })
+
+test_that("cumulative_evolution", {
+  # Bad data
+  expect_error(cumulative_evolution(1, 1:2))
+  expect_error(cumulative_evolution(NA, 1))
+
+  # Computes
+  x <- cumulative_evolution(1:4, c(1, 1, 1, 1), interpolate = FALSE)
+  expect_equal(x, 0:3)
+  y <- cumulative_evolution(1:4, c(1, 1, 1, 1), interpolate = TRUE)
+  expect_identical(x, y)
+
+  # Interpolates
+  z <- cumulative_evolution(1:4, c(1, 1, NA, 1), interpolate = TRUE)
+  expect_identical(x, z)
+})

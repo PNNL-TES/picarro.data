@@ -8,15 +8,15 @@ compute_flux(seconds, gas_ppm, volume_cm3, tair_C,
   pressure_kPa = 101.325, debug_plot = FALSE)
 }
 \arguments{
-\item{seconds}{Timestamps in (typically) seconds, numeric vector}
+\item{seconds}{Timestamps in (typically) seconds; numeric vector}
 
-\item{gas_ppm}{Gas (e.g. CO2 or CH4) concentrations, ppmv, numeric vector}
+\item{gas_ppm}{Gas (e.g. CO2 or CH4) concentrations, ppmv; numeric vector}
 
-\item{volume_cm3}{System volume, cm3, numeric}
+\item{volume_cm3}{System volume, cm3; numeric}
 
-\item{tair_C}{Air temperature, C, numeric}
+\item{tair_C}{Air temperature, C; numeric}
 
-\item{pressure_kPa}{Air pressure, kPa, numeric}
+\item{pressure_kPa}{Air pressure, kPa; numeric}
 
 \item{debug_plot}{Produce a plot of data and fitted model? Logical}
 }

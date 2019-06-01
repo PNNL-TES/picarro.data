@@ -6,7 +6,7 @@
 #' @return A \code{data.frame} of the data.
 #' @note This can read plain-text or compressed (via \code{zip} or \code{gz}) files.
 #' @importFrom tibble as_tibble
-#' @importFrom utils read.table
+#' @importFrom utils read.table unzip
 #' @export
 read_picarro_file <- function(filename) {
   message("Reading ", filename)

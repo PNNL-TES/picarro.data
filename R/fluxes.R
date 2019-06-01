@@ -3,14 +3,15 @@
 
 #' Compute respiration flux from concentration data.
 #'
-#' @param seconds Timestamps in (typically) seconds, numeric vector
-#' @param gas_ppm Gas (e.g. CO2 or CH4) concentrations, ppmv, numeric vector
-#' @param volume_cm3 System volume, cm3, numeric
-#' @param tair_C Air temperature, C, numeric
-#' @param pressure_kPa Air pressure, kPa, numeric
+#' @param seconds Timestamps in (typically) seconds; numeric vector
+#' @param gas_ppm Gas (e.g. CO2 or CH4) concentrations, ppmv; numeric vector
+#' @param volume_cm3 System volume, cm3; numeric
+#' @param tair_C Air temperature, C; numeric
+#' @param pressure_kPa Air pressure, kPa; numeric
 #' @param debug_plot Produce a plot of data and fitted model? Logical
 #'
 #' @return The gas flux, µmol per second.
+#' @export
 #'
 #' @references
 #' \itemize{
@@ -24,7 +25,6 @@
 #' }
 #' @note The computed is \emph{not} area- or mass-corrected.
 #'
-#' @export
 #' @importFrom graphics abline plot title
 #' @importFrom stats coefficients lm na.omit
 #'
@@ -68,24 +68,42 @@ compute_flux <- function(seconds, gas_ppm, volume_cm3, tair_C,
 }
 
 
-# cumulative_fluxes <- function(interpolate = TRUE) {
-#
-#   # Cumulative emissions
-#   sdata %>%
-#     arrange(DATETIME) %>%
-#     group_by(Sample_number) %>%
-#     # Compute incubation time
-#     mutate(inctime_hours = as.numeric(difftime(DATETIME, min(DATETIME), units = "hours")) %>% round(2),
-#            # interpolate missing fluxes
-#            CO2_flux_mgC_hr_interp = approx(inctime_hours, CO2_flux_mgC_hr, xout = inctime_hours, rule = 2)[['y']],
-#            CH4_flux_mgC_hr_interp = approx(inctime_hours, CH4_flux_mgC_hr, xout = inctime_hours, rule = 2)[['y']],
-#            # ...and compute cumulative emissions
-#            delta_hrs = (inctime_hours - lag(inctime_hours)),
-#            CO2_flux_mgC = CO2_flux_mgC_hr_interp * delta_hrs,
-#            cumCO2_flux_mgC_gSoil = c(0, cumsum(CO2_flux_mgC[-1] / DryMass_SoilOnly_g[-1])),
-#            CH4_flux_mgC = CH4_flux_mgC_hr_interp * delta_hrs,
-#            cumCH4_flux_mgC_gSoil = c(0, cumsum(CH4_flux_mgC[-1] / DryMass_SoilOnly_g[-1])),
-#            label = if_else(inctime_hours == max(inctime_hours), SampleID, "")) %>%
-#     ungroup
-#
-# }
+#' Compute cumulative C evolved
+#'
+#' @param time Time, typically s or hr but arbitrary; numeric
+#' @param flux Flux, in units of X/unit time; numeric
+#' @param interpolate Interpolate missing values? Logical
+#'
+#' @return A vector of cumulative values of X evolved.
+#' @export
+#' @importFrom stats approx
+#' @importFrom utils head
+#'
+#' @details X evolved at timestep \emph{i} is the
+#' lag between \code{time[i]} and \code{time[i-1]} multiplied by the mean of
+#' \code{flux[i]} and \code{flux[i-1]}.
+#' The first timestamp value is considered as time zero, so its corresponding
+#' cumulative value will always be zero.
+#'
+#' @examples
+#' cumulative_evolution(1:4, c(1, 1, NA, 1))
+#' cumulative_evolution(1:4, c(1, 1, 2, 1))
+cumulative_evolution <- function(time, flux, interpolate = TRUE) {
+
+  stopifnot(all(!is.na(time)))
+  stopifnot(length(time) == length(flux))
+
+  if(interpolate) {
+    flux = approx(time, flux, xout = time, rule = 2)[['y']]
+  }
+
+  delta_time <- (time - lag(time))[-1]
+
+  intermediate_fluxes <- rep(NA_real_, length(delta_time))
+  ivals <- head(seq_along(flux), -1)
+  for(i in ivals) {
+    intermediate_fluxes[i] <- mean(c(flux[i], flux[i+1]))
+  }
+  evolved <- intermediate_fluxes * delta_time
+  c(0, cumsum(evolved))  # cumulative
+}
