@@ -4,13 +4,10 @@
 \alias{process_directory}
 \title{Scan a directory and read all Picarro files in it.}
 \usage{
-process_directory(path, tz = "", recursive = TRUE)
+process_directory(path, recursive = TRUE)
 }
 \arguments{
 \item{path}{Folder to process, character.}
-
-\item{tz}{Timezone to use for timestamps, e.g. "America/New_York", character.
-See \url{https://en.wikipedia.org/wiki/List_of_tz_database_time_zones}.}
 
 \item{recursive}{Scan (via \code{\link{list.files}}) subfolders? Logical.}
 }

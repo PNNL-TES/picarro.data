@@ -2,19 +2,16 @@
 % Please edit documentation in R/clean.R
 \name{assign_sample_numbers}
 \alias{assign_sample_numbers}
-\title{Assign sample numbers, and optionally remove some valves' data.}
+\title{Assign sample numbers.}
 \usage{
-assign_sample_numbers(raw_data, remove_valves = c())
+assign_sample_numbers(raw_data)
 }
 \arguments{
 \item{raw_data}{A \code{data.frame} of data returned by \code{\link{process_directory}}.}
-
-\item{remove_valves}{An optional vector of integer valve numbers to remove
-from the data, e.g. ambient ports.}
 }
 \value{
-The (possibly filtered) data with a new \code{Sample_number} column.
+The data with new \code{Sample_number} and \code{Elapsed_seconds} columns.
 }
 \description{
-Assign sample numbers, and optionally remove some valves' data.
+Assign sample numbers.
 }
