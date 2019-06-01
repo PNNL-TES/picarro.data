@@ -1,84 +1,91 @@
 # fluxes.R
 
 
-compute_flux <- function(Elapsed_seconds,
-                         Gas_concentration_ppm,
-                         Volume_cm3,
-                         Molar_weight,
-                         Tair_K,
-                         Pa_kPa,
-                         Mass_g) {
+#' Compute respiration flux from concentration data.
+#'
+#' @param seconds Timestamps in (typically) seconds, numeric vector
+#' @param gas_ppm Gas (e.g. CO2 or CH4) concentrations, ppmv, numeric vector
+#' @param volume_cm3 System volume, cm3, numeric
+#' @param tair_C Air temperature, C, numeric
+#' @param pressure_kPa Air pressure, kPa, numeric
+#' @param debug_plot Produce a plot of data and fitted model? Logical
+#'
+#' @return The gas flux, µmol per second.
+#'
+#' @references
+#' \itemize{
+#' \item{Steduto et al. (2002), "Automated closed-system canopy-chamber for continuous
+#' field-crop monitoring of CO2 and H2O fluxes" AFM 111:171-186
+#'  \url{http://dx.doi.org/10.1016/S0168-1923(02)00023-0}.}
+#' \item{Campbell and Normal (1998), An Introduction to Environmental Biophysics,
+#'  ISBN 978-1-4612-1626-1. New York: Springer-Verlag, 286 pp.}
+#'  \item{LI-COR Biosciences (2015), Using the LI-8100A Soil Gas Flux System & the LI-8150
+#'  Multiplexer, 984-11123. 238 pp.}
+#' }
+#' @note The computed is \emph{not} area- or mass-corrected.
+#'
+#' @export
+#' @importFrom graphics abline plot title
+#' @importFrom stats coefficients lm na.omit
+#'
+#' @examples
+#' compute_flux(1:10, 401:410, volume_cm3 = 2000, tair_C = 20)
+compute_flux <- function(seconds, gas_ppm, volume_cm3, tair_C,
+                         pressure_kPa = 101.325, debug_plot = FALSE) {
+
+  stopifnot(length(seconds) == length(gas_ppm))
+  stopifnot(length(na.omit(seconds)) > 2)
+  stopifnot(length(na.omit(gas_ppm)) > 2)
+  stopifnot(gas_ppm >= 0)
+  stopifnot(volume_cm3 > 0)
+  stopifnot(tair_C < 100)
+  stopifnot(pressure_kPa > 0)
+
   # We want to compute rate of change (CO2 ppm/s and CH4 ppb/s),
-  # and then convert this to mg C/s, using
-  # A = dC/dt * V/M * Pa/RT (cf. Steduto et al. 2002), where
+  # and then convert this to µmol/s using the ideal gas law:
+  # A = dC/dt * V * Pa/RT (cf. Steduto et al. 2002), where
   # 	A is the flux (µmol/g/s)
   #	  dC/dt is raw respiration as above (mole fraction/s)
   # 	V is total chamber volume (cm3)
-  #	  M is [dry] soil mass (g)
   #	  Pa is atmospheric pressure (kPa)
   #	  R is universal gas constant (8.3 x 10^3 cm3 kPa mol-1 K-1)
   #	  T is air temperature (K)
 
-  # The instrument tubing is 455 cm long by ID 1/16"
-  V_tubing <- (1/16 * 2.54 / 2 ) ^ 2 * pi * 455
-  # Headspace is in each is the total volume of the sleeve minus the soil volume
-  ## Kaizad: changed radius to 3 xcm
-  V_headspace <- (3 / 2) ^ 2 * pi * sdata$HeadSpace_Ht_cm
-  # Replace missing headspace values with the mean
-  V_headspace[is.na(V_headspace)] <- mean(V_headspace, na.rm = TRUE)
+  R <- 8.3145e+3			# cm3 kPa K−1 mol−1
 
-  # Internal volume of Picarro?
-  V_picarro <- 9 # Assume same as PP-Systems
+  # Compute ppm/s change in gas concentration
+  m <- lm(gas_ppm ~ seconds)
+  gas_ppm_s <- unname(coefficients(m)["seconds"])
 
-  sdata$V_cm3 <- V_tubing + V_headspace + V_picarro
+  if(debug_plot) {
+    plot(seconds, gas_ppm)
+    abline(coefficients(m))
+    title(paste("gas_ppm_s = ", round(gas_ppm_s, 4)))
+  }
 
-  Pa 			<- 101						# kPa				(Richland is ~120 m asl)
-  R 			<- 8.3145e+3			# cm3 kPa K−1 mol−1
-  Tair    <- 273.1 + 20 # TODO: fluxdata$Temperature     # C -> K
-
-  # Calculate mass-corrected respiration, µmol/s
-  CO2_flux_µmol_g_s <-
-    with(sdata,
-         CO2_ppm_s / 1 * # from ppm/s to µmol/s
-           V_cm3 * Pa / (R * Tair)) # ideal gas law
-  CH4_flux_µmol_g_s <-
-    with(sdata,
-         CH4_ppb_s / 1000 * # from ppb/s to µmol/s
-           V_cm3 * Pa / (R * Tair)) # ideal gas law
-
-  # Calculate flux of mg C/hr
-  sdata$CO2_flux_mgC_hr <- CO2_flux_µmol_g_s /
-    1e6 * # to mol
-    12 *  # to g C
-    1000 * # to mg C
-    60 * 60 # to /hr
-  sdata$CH4_flux_mgC_hr <- CH4_flux_µmol_g_s /
-    1e6 * # to mol
-    16 *  # to g C
-    1000 *  # to mg C
-    60 * 60 # to /hr
-
-
+  # Respiration, µmol/s via ideal gas law
+  gas_ppm_s * volume_cm3 * pressure_kPa / (R * (tair_C + 273.15))
 }
 
-cumulative_fluxes <- function(interpolate = TRUE) {
 
-  # Cumulative emissions
-  sdata %>%
-    arrange(DATETIME) %>%
-    group_by(Sample_number) %>%
-    # Compute incubation time
-    mutate(inctime_hours = as.numeric(difftime(DATETIME, min(DATETIME), units = "hours")) %>% round(2),
-           # interpolate missing fluxes
-           CO2_flux_mgC_hr_interp = approx(inctime_hours, CO2_flux_mgC_hr, xout = inctime_hours, rule = 2)[['y']],
-           CH4_flux_mgC_hr_interp = approx(inctime_hours, CH4_flux_mgC_hr, xout = inctime_hours, rule = 2)[['y']],
-           # ...and compute cumulative emissions
-           delta_hrs = (inctime_hours - lag(inctime_hours)),
-           CO2_flux_mgC = CO2_flux_mgC_hr_interp * delta_hrs,
-           cumCO2_flux_mgC_gSoil = c(0, cumsum(CO2_flux_mgC[-1] / DryMass_SoilOnly_g[-1])),
-           CH4_flux_mgC = CH4_flux_mgC_hr_interp * delta_hrs,
-           cumCH4_flux_mgC_gSoil = c(0, cumsum(CH4_flux_mgC[-1] / DryMass_SoilOnly_g[-1])),
-           label = if_else(inctime_hours == max(inctime_hours), SampleID, "")) %>%
-    ungroup
-
-}
+# cumulative_fluxes <- function(interpolate = TRUE) {
+#
+#   # Cumulative emissions
+#   sdata %>%
+#     arrange(DATETIME) %>%
+#     group_by(Sample_number) %>%
+#     # Compute incubation time
+#     mutate(inctime_hours = as.numeric(difftime(DATETIME, min(DATETIME), units = "hours")) %>% round(2),
+#            # interpolate missing fluxes
+#            CO2_flux_mgC_hr_interp = approx(inctime_hours, CO2_flux_mgC_hr, xout = inctime_hours, rule = 2)[['y']],
+#            CH4_flux_mgC_hr_interp = approx(inctime_hours, CH4_flux_mgC_hr, xout = inctime_hours, rule = 2)[['y']],
+#            # ...and compute cumulative emissions
+#            delta_hrs = (inctime_hours - lag(inctime_hours)),
+#            CO2_flux_mgC = CO2_flux_mgC_hr_interp * delta_hrs,
+#            cumCO2_flux_mgC_gSoil = c(0, cumsum(CO2_flux_mgC[-1] / DryMass_SoilOnly_g[-1])),
+#            CH4_flux_mgC = CH4_flux_mgC_hr_interp * delta_hrs,
+#            cumCH4_flux_mgC_gSoil = c(0, cumsum(CH4_flux_mgC[-1] / DryMass_SoilOnly_g[-1])),
+#            label = if_else(inctime_hours == max(inctime_hours), SampleID, "")) %>%
+#     ungroup
+#
+# }

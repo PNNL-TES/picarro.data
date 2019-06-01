@@ -1,6 +1,6 @@
 # test_read_data
 
-context("test_read_data")
+context("read_data")
 
 test_that("read_picarro_file", {
 

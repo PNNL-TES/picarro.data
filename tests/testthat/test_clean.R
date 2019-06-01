@@ -1,12 +1,14 @@
 
-context("assign_sample_numbers")
+context("clean")
 
 test_that("assign_sample_numbers", {
 
-  # `MPVPosition` has to be present; `Sample_number` can't be
-  df <- data.frame(Sample_number = 1)
+  # `MPVPosition` and `DATETIME` have to be present; `Sample_number` can't be
+  df <- data.frame(MPVPosition = 1)
   expect_error(assign_sample_numbers(df))
-  df <- data.frame(MPVPosition = 1, Sample_number = 1)
+  df <- data.frame(DATETIME = 1)
+  expect_error(assign_sample_numbers(df))
+  df <- data.frame(MPVPosition = 1, DATETIME = 1, Sample_number = 1)
   expect_error(assign_sample_numbers(df))
 
   df <- data.frame(DATETIME = seq(as.Date("2000/1/1"), by = "day", length.out = 5),

@@ -2,7 +2,7 @@
 % Please edit documentation in R/clean.R
 \name{assign_sample_numbers}
 \alias{assign_sample_numbers}
-\title{Assign sample numbers.}
+\title{Assign sample numbers and compute \code{Elapsed_seconds} for each sample.}
 \usage{
 assign_sample_numbers(raw_data)
 }
@@ -13,5 +13,5 @@ assign_sample_numbers(raw_data)
 The data with new \code{Sample_number} and \code{Elapsed_seconds} columns.
 }
 \description{
-Assign sample numbers.
+Assign sample numbers and compute \code{Elapsed_seconds} for each sample.
 }

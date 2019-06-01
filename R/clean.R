@@ -1,5 +1,5 @@
 
-#' Assign sample numbers.
+#' Assign sample numbers and compute \code{Elapsed_seconds} for each sample.
 #'
 #' @param raw_data A \code{data.frame} of data returned by \code{\link{process_directory}}.
 #' @return The data with new \code{Sample_number} and \code{Elapsed_seconds} columns.
@@ -9,6 +9,7 @@
 assign_sample_numbers <- function(raw_data) {
   stopifnot(!"Sample_number" %in% colnames(raw_data))
   stopifnot("MPVPosition" %in% colnames(raw_data))
+  stopifnot("DATETIME" %in% colnames(raw_data))
 
   raw_data %>%
     # Whenever the valve position changes, that's a new sample starting
