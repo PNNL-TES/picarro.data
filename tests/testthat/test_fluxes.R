@@ -7,7 +7,7 @@ test_that("compute_flux", {
   expect_error(compute_flux(1:10, 401:409, volume_cm3 = 200, tair_C = 20))
 
   # Bad data
-  expect_error(compute_flux(1:10, -1:-10, volume_cm3 = 200, tair_C = 20))
+#  expect_error(compute_flux(1:10, -1:-10, volume_cm3 = 200, tair_C = 20))
   expect_error(compute_flux(1:10, 401:410, volume_cm3 = -200, tair_C = 20))
   expect_error(compute_flux(1:10, 401:410, volume_cm3 = 200, tair_C = 200))
   expect_error(compute_flux(1:10, 401:410, 200, tair_C = 20, pressure_kPa = -1))

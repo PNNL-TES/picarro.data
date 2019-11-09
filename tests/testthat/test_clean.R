@@ -3,6 +3,10 @@ context("clean")
 
 test_that("assign_sample_numbers", {
 
+  # Handles NULL
+  expect_silent(assign_sample_numbers(NULL))
+  expect_null(assign_sample_numbers(NULL))
+
   # `MPVPosition` and `DATETIME` have to be present; `Sample_number` can't be
   df <- data.frame(MPVPosition = 1)
   expect_error(assign_sample_numbers(df))
@@ -21,6 +25,10 @@ test_that("assign_sample_numbers", {
 })
 
 test_that("clean_data", {
+  # Handles NULL
+  expect_silent(clean_data(NULL))
+  expect_null(clean_data(NULL))
+
   df <- data.frame(DATE = "2019-05-30", TIME = "19:55:32",
                    ALARM_STATUS = 0,
                    MPVPosition = c(4, 4.1, 2, 1, 1),

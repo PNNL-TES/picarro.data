@@ -44,7 +44,6 @@ compute_flux <- function(time, gas_ppm, volume_cm3, tair_C,
   stopifnot(length(time) == length(gas_ppm))
   stopifnot(length(na.omit(time)) > 2)
   stopifnot(length(na.omit(gas_ppm)) > 2)
-  stopifnot(gas_ppm >= 0)
   stopifnot(volume_cm3 > 0)
   stopifnot(tair_C < 100)
   stopifnot(pressure_kPa > 0)
